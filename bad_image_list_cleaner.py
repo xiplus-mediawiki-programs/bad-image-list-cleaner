@@ -29,6 +29,7 @@ class BadImageListCleaner:
     INSERT_FLAG = '<!-- english wikipedia insertion point -->'
     cachedPages = {}
     cachedFiles = {}
+    badImages = set()
 
     def __init__(self, site, cfg):
         self.site = site
@@ -97,6 +98,8 @@ class BadImageListCleaner:
             return None, None
         file_title = exists_file_title
 
+        self.badImages.add(file_title)
+
         m = re.search(r'except on(.+?)$', text)
         newTitles = []
         if m:
@@ -116,10 +119,7 @@ class BadImageListCleaner:
         new_lines = []
         found_files = set()
         logger.info('total %s lines', len(lines))
-        for idx, line in enumerate(lines, 1):
-            if idx % 100 == 0:
-                logger.info('run line %s', idx)
-
+        for line in lines:
             file_title, new_line = self.fix_line(line)
             if file_title:
                 found_files.add(file_title)
@@ -140,10 +140,7 @@ class BadImageListCleaner:
         if pos:
             en_new_text = ''
             logger.info('total %s lines', len(en_list))
-            for idx, file_title in enumerate(en_list, 1):
-                if idx % 100 == 0:
-                    logger.info('run line %s', idx)
-
+            for file_title in en_list:
                 if file_title in found_files:
                     continue
 
@@ -198,19 +195,54 @@ class BadImageListCleaner:
 
         if text == new_text:
             logger.info('nothing changed')
-            return
-
-        if self.CONFIRM:
-            pywikibot.showDiff(text, new_text)
-            save = input('Save?')
-        elif self.DRY_RUN:
-            save = 'no'
         else:
-            save = 'yes'
+            if self.CONFIRM:
+                pywikibot.showDiff(text, new_text)
+                save = input('Save?')
+            elif self.DRY_RUN:
+                save = 'no'
+            else:
+                save = 'yes'
 
-        if save.lower() in ['y', 'yes']:
-            badPage.text = new_text
-            badPage.save(summary=self.cfg['summary'], minor=False, botflag=False)
-        else:
-            with open('temp.txt', 'w', encoding='utf8') as f:
-                f.write(new_text)
+            if save.lower() in ['y', 'yes']:
+                badPage.text = new_text
+                badPage.save(summary=self.cfg['summary_list'], minor=False, botflag=False)
+            else:
+                with open('temp.txt', 'w', encoding='utf8') as f:
+                    f.write(new_text)
+
+        markedPages = set()
+        for page in pywikibot.Page(self.site, 'Template:受限制文件').embeddedin(namespaces=6):
+            markedPages.add(page.title())
+            if page.title() not in self.badImages:
+                logger.info('unmark %s', page.title())
+                new_text = re.sub(r'{{[\s_]*(受限制文件|Restricted[ _]+use|Badimage|Bad[ _]+image)[\s_]*(\|[^{}]*?)?}}\n?', '', page.text)
+                if page.text != new_text:
+                    if self.CONFIRM:
+                        pywikibot.showDiff(page.text, new_text)
+                        save = input('Save?')
+                    elif self.DRY_RUN:
+                        save = 'no'
+                    else:
+                        save = 'yes'
+
+                    if save.lower() in ['y', 'yes']:
+                        page.text = new_text
+                        page.save(summary=self.cfg['summary_unmark'], minor=False, botflag=True)
+
+        for title in self.badImages - markedPages:
+            logger.info('mark %s', title)
+            page = pywikibot.Page(self.site, title)
+            new_text = '{{受限制文件}}\n' + page.text
+            if page.text != new_text:
+                if self.CONFIRM:
+                    pywikibot.showDiff(page.text, new_text)
+                    save = input('Save?')
+                elif self.DRY_RUN:
+                    save = 'no'
+                else:
+                    save = 'yes'
+
+                if save.lower() in ['y', 'yes']:
+                    page.text = new_text
+                    page.save(summary=self.cfg['summary_mark'], minor=False, botflag=True)
