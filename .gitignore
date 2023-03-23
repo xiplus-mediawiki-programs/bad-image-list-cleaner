@@ -1,1 +1,8 @@
+__pycache__/
+apicache-py3/
 bad_image_list_cleaner.log
+config.py
+pywikibot*.lwp
+throttle.ctrl
+user-config.py
+user-password.py
