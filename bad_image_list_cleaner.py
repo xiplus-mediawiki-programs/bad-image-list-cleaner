@@ -10,17 +10,10 @@ from pywikibot.data.api import Request
 logger = logging.getLogger('bilc')
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
-
 stdout_handler = logging.StreamHandler(sys.stdout)
 stdout_handler.setLevel(logging.INFO)
 stdout_handler.setFormatter(formatter)
-
-file_handler = logging.FileHandler('bad_image_list_cleaner.log', encoding='utf8')
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(formatter)
-
 logger.addHandler(stdout_handler)
-logger.addHandler(file_handler)
 
 
 class BadImageListCleaner:
