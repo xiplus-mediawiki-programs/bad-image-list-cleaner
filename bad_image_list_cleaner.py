@@ -147,10 +147,11 @@ class BadImageListCleaner:
 
                 logger.debug('%s is new from enwiki', file_title)
                 pages = []
-                for page in file_page.usingPages():
+                for page in file_page.using_pages():
                     pages.append(page.title())
                 en_new_text += self.format_line(file_title, pages) + '\n'
                 found_files.add(file_title)
+                self.badImages.add(file_title)
             new_text = new_text[:pos] + en_new_text + new_text[pos:]
 
         return new_text
