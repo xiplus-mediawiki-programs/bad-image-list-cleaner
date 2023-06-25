@@ -53,14 +53,16 @@ class TestBILC(unittest.TestCase):
     def test_merge_new(self):
         self.assertEqual(self.bilc.process_text(
             '''== English Wikipedia ==
+Updated at {}{}.
 {}
-== Other =='''.format(self.bilc.INSERT_FLAG),
+== Other =='''.format(self.bilc.EN_UPDATE_TIME_START, self.bilc.EN_UPDATE_TIME_END, self.bilc.INSERT_FLAG),
             ['File:Shiroisuna no Akuatopu Key Visual.jpg']
         ),
             '''== English Wikipedia ==
+Updated at {}~~~~~{}.
 * [[:File:Shiroisuna no Akuatopu Key Visual.jpg]] except on [[白沙的Aquatope]]
 {}
-== Other =='''.format(self.bilc.INSERT_FLAG)
+== Other =='''.format(self.bilc.EN_UPDATE_TIME_START, self.bilc.EN_UPDATE_TIME_END, self.bilc.INSERT_FLAG)
         )
 
     def test_merge_exists(self):

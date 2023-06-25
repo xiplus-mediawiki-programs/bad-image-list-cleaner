@@ -20,6 +20,8 @@ class BadImageListCleaner:
     CONFIRM = False
     DRY_RUN = False
     INSERT_FLAG = '<!-- english wikipedia insertion point -->'
+    EN_UPDATE_TIME_START = '<!-- english update time start -->'
+    EN_UPDATE_TIME_END = '<!-- english update time end -->'
     cachedPages = {}
     cachedFiles = {}
     badImages = set()
@@ -127,7 +129,7 @@ class BadImageListCleaner:
         try:
             pos = new_text.index(self.INSERT_FLAG)
         except ValueError:
-            logger.warning('Failed to find insertion point')
+            logger.error('Failed to find insertion point')
             pos = None
 
         if pos:
@@ -152,7 +154,14 @@ class BadImageListCleaner:
                 en_new_text += self.format_line(file_title, pages) + '\n'
                 found_files.add(file_title)
                 self.badImages.add(file_title)
-            new_text = new_text[:pos] + en_new_text + new_text[pos:]
+            if en_new_text != '':
+                new_text = new_text[:pos] + en_new_text + new_text[pos:]
+                try:
+                    idx1 = new_text.index(self.EN_UPDATE_TIME_START)
+                    idx2 = new_text.index(self.EN_UPDATE_TIME_END)
+                    new_text = new_text[:idx1] + self.EN_UPDATE_TIME_START + '~~~~~' + new_text[idx2:]
+                except ValueError:
+                    logger.error('Failed to find en update time flags')
 
         return new_text
 
