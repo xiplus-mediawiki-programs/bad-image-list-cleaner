@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import unittest
+import logging
 
 from bad_image_list_cleaner import BadImageListCleaner
 
@@ -12,9 +13,10 @@ class TestBILC(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        site = pywikibot.Site()
-        site.login()
+        site = pywikibot.Site('zh', 'wikipedia')
         self.bilc = BadImageListCleaner(site, {})
+        logger = logging.getLogger('bilc')
+        logger.setLevel(logging.WARNING)
 
     def test_fix_redirect(self):
         self.assertEqual(self.bilc.process_text(
